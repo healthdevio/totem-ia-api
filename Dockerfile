@@ -67,7 +67,7 @@ FROM --platform=linux/x86_64 node:18 As production
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 COPY --chown=node:node --from=build /usr/src/app/prisma prisma 
-COPY --chown=node:node --from=build /usr/src/app/infra/config ./dist/infra/config
+# COPY --chown=node:node --from=build /usr/src/app/infra/config ./dist/infra/config
 
 # COPY --chown=node:node .env ./
 

@@ -37,6 +37,10 @@ export class FaceApiService {
 
     console.log("Loading FaceAPI models");
     const modelPath = path.join(__dirname, this.modelsUrl);
+
+    console.log('>> ', modelPath);
+    
+
     await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
     await faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
     await faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath)

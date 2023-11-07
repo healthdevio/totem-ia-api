@@ -2,7 +2,7 @@
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
 
-FROM --platform=linux/x86_64 node:18-alpine as development
+FROM --platform=linux/x86_64 node:18 as development
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -12,17 +12,8 @@ WORKDIR /usr/src/app
 # Copying this first prevents re-running npm install on every code change.
 COPY --chown=node:node package*.json ./
 
-RUN apk add --update --no-cache \
-    make \
-    g++ \
-    jpeg-dev \
-    cairo-dev \
-    giflib-dev \
-    pango-dev \
-    libtool \
-    autoconf \
-    automake
-
+RUN apt-get update
+RUN apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 # Install app dependencies using the `npm ci` command instead of `npm install`
 RUN npm ci
 
@@ -38,7 +29,7 @@ USER node
 # BUILD FOR PRODUCTION
 ###################
 
-FROM --platform=linux/x86_64 node:18-alpine As build
+FROM --platform=linux/x86_64 node:18 As build
 
 WORKDIR /usr/src/app
 
@@ -60,16 +51,8 @@ RUN npm run build
 ENV NODE_ENV production
 
 # Running `npm ci` removes the existing node_modules directory and passing in --only=production ensures that only the production dependencies are installed. This ensures that the node_modules directory is as optimized as possible
-RUN apk add --update --no-cache \
-    make \
-    g++ \
-    jpeg-dev \
-    cairo-dev \
-    giflib-dev \
-    pango-dev \
-    libtool \
-    autoconf \
-    automake
+RUN apt-get update
+RUN apt-get install -y build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
 RUN npm ci --only=production && npm cache clean --force
 
 USER node
@@ -78,7 +61,7 @@ USER node
 # PRODUCTION
 ###################
 
-FROM --platform=linux/x86_64 node:18-alpine As production
+FROM --platform=linux/x86_64 node:18 As production
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules

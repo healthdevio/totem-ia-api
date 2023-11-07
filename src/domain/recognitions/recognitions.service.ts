@@ -227,6 +227,9 @@ export class RecognitionsService {
 
     const imgPath = path.join(folders, personId, 'foto.jpeg')
 
+    console.log('Photo Stored in: ', imgPath);
+    
+
     if(fs.existsSync(imgPath)) {
       fs.unlinkSync(imgPath)
     }

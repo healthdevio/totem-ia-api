@@ -76,8 +76,15 @@ export class FaceApiService {
       fs.mkdirSync(filepaths)
     } 
 
-    const folders = fs.readdirSync(path.join(__dirname, '..', '..', '..', 'files'))
+    const filespath = path.join(__dirname, '..', '..', '..', 'files')
 
+    console.log('File where we read ', filepaths);
+    
+
+    const folders = fs.readdirSync(filespath)
+
+    console.log('Readed files and folders ', folders);
+    
 
     const labeledFaceDescriptors = await Promise.all(
       folders.map(async label => {

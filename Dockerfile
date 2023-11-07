@@ -2,7 +2,7 @@
 # BUILD FOR LOCAL DEVELOPMENT
 ###################
 
-FROM --platform=linux/amd64 node:18-alpine as development
+FROM --platform=linux/x86_64 node:18-alpine as development
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -29,7 +29,7 @@ USER node
 # BUILD FOR PRODUCTION
 ###################
 
-FROM --platform=linux/amd64 node:18-alpine As build
+FROM --platform=linux/x86_64 node:18-alpine As build
 
 WORKDIR /usr/src/app
 
@@ -60,7 +60,7 @@ USER node
 # PRODUCTION
 ###################
 
-FROM --platform=linux/amd64 node:18-alpine As production
+FROM --platform=linux/x86_64 node:18-alpine As production
 
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules

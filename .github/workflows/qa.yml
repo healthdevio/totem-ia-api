@@ -70,6 +70,6 @@ jobs:
             aws ecr get-login-password --region ${{env.AWS_REGION}} | docker login --username AWS --password-stdin ${{env.ECR_REGISTRY}}
             docker rmi -f ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}}
             docker rm -f ${{env.SERVICE_NAME}}
-            docker run --name ${{env.SERVICE_NAME}} -d -p ${{env.SERVICE_PORT}}:80 --env-file=${{env.ENV_FILE}} --network ${{env.DOCKER_NETWORK}} ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}}
+            docker run --name ${{env.SERVICE_NAME}} -d -p ${{env.SERVICE_PORT}}:80 --env-file=${{env.ENV_FILE}} --network ${{env.DOCKER_NETWORK}} -v /root/apps/totem/files:/files ${{env.ECR_REGISTRY}}/${{env.ECR_REPOSITORY}}:${{env.IMAGE_TAG}}
           ENDSSH
       

@@ -9,7 +9,7 @@ env:
   AWS_REGION: us-east-1
   SERVER_ADDRESS: hml.api.saudehd.com.br
   SERVICE_NAME: totem
-  SERVICE_PORT: 8091
+  SERVICE_PORT: 7773
   ENVIRONMENT_BUCKET_NAME: saudehd-environments
   ENVIRONMENT: qa
   DOCKER_NETWORK: hml

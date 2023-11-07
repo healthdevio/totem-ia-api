@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common'
-import { RecognitionsModule } from './recognitions/recognitions.module'
+import { CheckinModule } from './domain/checkin/checkin.module'
+import { RecognitionsModule } from './domain/recognitions/recognitions.module'
 
 @Module({
-  imports: [RecognitionsModule],
+  imports: [RecognitionsModule, CheckinModule],
   controllers: [],
   providers: [],
 })

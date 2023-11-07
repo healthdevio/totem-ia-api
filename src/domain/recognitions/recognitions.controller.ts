@@ -4,19 +4,19 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
+  Put,
+  Query,
   Res
 } from '@nestjs/common'
 import { Response } from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
-import { UpdateRecognitionDto } from './dto/update-recognition.dto'
 import { RecognitionsService } from './recognitions.service'
 
 @Controller('recognitions')
 export class RecognitionsController {
-  constructor(private readonly recognitionsService: RecognitionsService) {}
+  constructor(private readonly recognitionsService: RecognitionsService) { }
 
   // @Post()
   // create(@Body() createRecognitionDto: CreateRecognitionDto) {
@@ -28,22 +28,21 @@ export class RecognitionsController {
     return this.recognitionsService.findAll(fileString)
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.recognitionsService.findOne(+id)
-  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.recognitionsService.findOne(+id)
+  // }
 
   @Get(':id/scheduling')
   getPendingScheduling(@Param('id') id: string) {
     return this.recognitionsService.getPendingScheduling(id)
   }
 
-  @Patch(':id')
+  @Put('person')
   update(
-    @Param('id') id: string,
-    @Body() updateRecognitionDto: UpdateRecognitionDto,
+    @Body() updateRecognitionDto: {cpf: string; birth_date: string; telephone: string; name: string},
   ) {
-    return this.recognitionsService.update(+id, updateRecognitionDto)
+    return this.recognitionsService.update(updateRecognitionDto)
   }
 
   @Delete(':id')
@@ -60,4 +59,13 @@ export class RecognitionsController {
     stream.pipe(response)
   }
 
+  @Get('/person')
+  getPersonByCpfAndBirthDate(@Query() data: { birth_date: string, cpf: string }) { 
+    return this.recognitionsService.getPersonByCpfAndBirthDate(data)
+  }
+
+  @Post('upload')
+  upload(@Body() {base64Img, personId}: {base64Img: string, personId: string}) {
+    return this.recognitionsService.upload(base64Img, personId)
+  }
 }

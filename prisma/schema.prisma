@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,4 +5,1202 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model accident_indicator {
+  id          String        @id(map: "accident_indicator_pk") @db.Uuid
+  name        String        @db.VarChar
+  description String?       @db.VarChar
+  schedulings schedulings[]
+}
+
+model advices {
+  id                String              @id(map: "advice_pk") @db.Uuid
+  acronym           String              @db.VarChar(10)
+  description       String              @db.VarChar(100)
+  professionals     professionals[]
+  service_locations service_locations[]
+
+  @@index([acronym], map: "advice1")
+}
+
+model ai_prompts {
+  id                String          @id(map: "ai_promts_pk") @default(dbgenerated("(gen_random_uuid())::character varying")) @db.VarChar
+  created_at        DateTime        @default(now()) @db.Timestamp(6)
+  index             Int
+  prompt            String          @db.VarChar
+  active            Boolean         @default(true)
+  ai_search_type_id String          @db.VarChar
+  keywords          String?         @db.VarChar
+  show_to_user      Boolean         @default(true)
+  ai_search_types   ai_search_types @relation(fields: [ai_search_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "search_types_fk")
+
+  @@unique([index, ai_search_type_id], map: "ai_prompts_un")
+}
+
+model ai_responses {
+  id               String   @id(map: "ai_responses_pk") @default(dbgenerated("(gen_random_uuid())::character varying")) @db.VarChar
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  provider         String   @db.VarChar
+  model            String   @db.VarChar
+  prompt           String   @db.VarChar
+  response         String   @db.VarChar
+  external_id      String?  @db.VarChar
+  external_chat_id String?  @db.VarChar
+  integration_id   String?  @db.VarChar
+  response_subject String?  @db.VarChar
+}
+
+model ai_search_types {
+  id          String       @id(map: "ai_search_types_pk") @db.VarChar
+  name        String       @db.VarChar
+  description String       @db.VarChar
+  created_at  DateTime     @default(now()) @db.Timestamp(6)
+  active      Boolean      @default(true)
+  ai_prompts  ai_prompts[]
+}
+
+model ai_transcriptions {
+  id             String   @id(map: "ai_transcriptions_pk") @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  transcription  String   @db.VarChar
+  integration_id String?  @db.VarChar
+  created_at     DateTime @default(now()) @db.Timestamp(6)
+  active         Boolean  @default(true)
+  prompt         String?  @db.VarChar
+}
+
+model allergy {
+  id              String   @id(map: "allergy_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String   @db.VarChar
+  allergy_type_id String   @db.Uuid
+  person_id       String   @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  created_by      String?  @db.Uuid
+  persons         persons  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "allergy_fk")
+  users           users?   @relation(fields: [created_by], references: [id], onDelete: NoAction, map: "user_fk")
+}
+
+model allergy_type {
+  id          String @id(map: "allergy_type_pk") @db.Uuid
+  description String @db.VarChar
+}
+
+model anaminesis {
+  id               String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cid_id           String?      @db.Uuid
+  note_cid         String?      @db.VarChar
+  main_complaint   String?      @db.VarChar
+  time_illness     Int?
+  time_count       String?      @db.VarChar
+  clinical_history String?      @db.VarChar
+  scheduling_id    String?      @db.Uuid
+  active           Boolean      @default(true)
+  created_at       DateTime     @default(now()) @db.Timestamp(6)
+  cids             cids?        @relation(fields: [cid_id], references: [id], onDelete: NoAction, map: "cid_fk")
+  schedulings      schedulings? @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scheduling_fk")
+}
+
+model anexo_types {
+  id          String   @id(map: "anexo_types_pk") @db.Uuid
+  description String   @db.VarChar(120)
+  type        String?  @db.VarChar(20)
+  anexos      anexos[]
+}
+
+model anexos {
+  id            String          @id(map: "anexos_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String          @db.VarChar(200)
+  description   String?         @db.VarChar(200)
+  path          String          @db.VarChar(500)
+  size          Int?
+  extension     String          @db.VarChar(25)
+  created_at    DateTime?       @default(now()) @db.Timestamp(6)
+  operator_id   String          @db.Uuid
+  anexo_type_id String          @db.Uuid
+  bucket_id     String?         @db.Uuid
+  mime_type     String?         @map("mime-type") @db.VarChar
+  anexo_types   anexo_types     @relation(fields: [anexo_type_id], references: [id], onDelete: NoAction, map: "anexo_types_fk")
+  buckets       buckets?        @relation(fields: [bucket_id], references: [id], onDelete: NoAction, map: "bucket_fk")
+  users         users           @relation(fields: [operator_id], references: [id], onDelete: NoAction, map: "user_fk")
+  person_anexos person_anexos[]
+}
+
+model aplications {
+  id           String     @id @db.Uuid
+  name         String     @db.VarChar(200)
+  description  String     @db.VarChar(700)
+  permition_id String     @db.Uuid
+  permitions   permitions @relation(fields: [permition_id], references: [id], onDelete: NoAction, map: "permition_fk")
+}
+
+model buckets {
+  id          String    @id(map: "buckets_pk") @db.Uuid
+  name        String    @unique @db.VarChar(100)
+  description String    @db.VarChar(255)
+  regiao      String    @db.VarChar(20)
+  url         String    @db.VarChar(255)
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  anexos      anexos[]
+}
+
+model chat {
+  id                String              @id(map: "newtable_pk") @db.Uuid
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  created_by        String?             @db.Uuid
+  users             users?              @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "newtable_fk")
+  chat_professional chat_professional[]
+  chat_services     chat_services[]
+  messages          messages[]
+}
+
+model chat_professional {
+  id              String        @id(map: "chat_professional_pk") @db.Uuid
+  chat_id         String        @db.Uuid
+  professional_id String        @db.Uuid
+  created_at      DateTime      @default(now()) @db.Timestamp(6)
+  chat            chat          @relation(fields: [chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_fk")
+  professionals   professionals @relation(fields: [professional_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "professional_fk")
+}
+
+model chat_services {
+  id         String @id(map: "chat_services_pk") @db.Uuid
+  service_id String @db.Uuid
+  chat_id    String @db.Uuid
+  chat       chat   @relation(fields: [chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_fk")
+}
+
+model checkin {
+  id          String        @id @db.Uuid
+  date        DateTime      @default(now()) @db.Timestamp(6)
+  device      String?       @db.VarChar
+  mac         String?       @db.VarChar
+  ip          String?       @db.VarChar
+  source_id   String?       @db.Uuid
+  source      source?       @relation(fields: [source_id], references: [id], onDelete: NoAction, map: "source_fk")
+  schedulings schedulings[]
+}
+
+model cid_guides {
+  id       String @id @db.Uuid
+  cid_id   String @db.Uuid
+  guide_id String @db.Uuid
+}
+
+model cids {
+  id            String          @id @db.Uuid
+  code          String          @unique(map: "cids_2") @db.VarChar(5)
+  description   String          @db.VarChar(240)
+  active        Boolean         @default(true)
+  anaminesis    anaminesis[]
+  exams_request exams_request[]
+  guides        guides[]
+
+  @@index([description], map: "cids_1")
+}
+
+model client_conventions {
+  id                                          String        @id(map: "client_conventions_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  client_id                                   String        @db.Uuid
+  convention_id                               String        @db.VarChar
+  active                                      Boolean       @default(true)
+  created_at                                  DateTime      @default(now()) @db.Timestamp(6)
+  created_by                                  String?       @db.Uuid
+  disabled_at                                 DateTime?     @db.Timestamp(6)
+  disabled_by                                 String?       @db.Uuid
+  card_number                                 String?       @db.VarChar
+  expiration                                  DateTime?     @db.Date
+  type                                        String        @default("T") @db.VarChar(1)
+  clients                                     clients       @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "client_fk")
+  users_client_conventions_created_byTousers  users?        @relation("client_conventions_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "created_fk")
+  users_client_conventions_disabled_byTousers users?        @relation("client_conventions_disabled_byTousers", fields: [disabled_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "disabled_fk")
+  schedulings                                 schedulings[]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model clients {
+  id                     String                   @id(map: "client_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  status                 String?                  @db.VarChar(1)
+  person_id              String                   @db.Uuid
+  created_at             DateTime                 @default(dbgenerated("clock_timestamp()")) @db.Timestamp(6)
+  bond                   String?                  @db.VarChar(1)
+  contract_id            String?                  @db.Uuid
+  pre                    Boolean?                 @default(false)
+  confirmed_at           DateTime?                @db.Timestamptz(6)
+  record_number          Int                      @default(autoincrement())
+  active                 Boolean                  @default(true)
+  client_conventions     client_conventions[]
+  contract               contract?                @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contract_fk")
+  persons                persons                  @relation(fields: [person_id], references: [id], onDelete: NoAction, map: "person_fk")
+  exams_request          exams_request[]
+  guides                 guides[]
+  schedule_notification  schedule_notification[]
+  schedulings            schedulings[]
+  service_password_calls service_password_calls[]
+}
+
+model confirmation_codes {
+  id           String    @id(map: "confirmation_code_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code         String    @db.VarChar
+  type         Int
+  active       Boolean   @default(true)
+  user_id      String    @db.Uuid
+  confirmed_at DateTime? @db.Timestamp(6)
+  confirmed    Boolean   @default(false)
+  contact      String?   @db.VarChar
+  outbox_type  String?   @db.VarChar
+  created_at   DateTime  @default(now()) @db.Timestamp(6)
+  users        users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "confirmation_code_fk")
+}
+
+model consultation_type {
+  id          String        @id(map: "consultation_type_pk") @db.Uuid
+  name        String        @db.VarChar
+  description String?       @db.VarChar
+  default     Boolean       @default(false)
+  schedulings schedulings[]
+}
+
+model contract {
+  id                  String                @id(map: "contract_pk") @db.Uuid
+  active              Boolean               @default(true)
+  name                String                @db.VarChar
+  logo_uri            String?               @db.VarChar
+  clients             clients[]
+  conventions         conventions[]
+  exams_request       exams_request[]
+  notification_params notification_params[]
+  operators           operators[]
+  packages            packages[]
+  person_params       person_params[]
+  person_params_types person_params_types[]
+  procedures          procedures[]
+  professionals       professionals[]
+  service_locations   service_locations[]
+  user_permitions     user_permitions[]
+  users               users[]
+}
+
+model conventions {
+  id                          String                        @id(map: "convention_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                        String                        @db.VarChar(100)
+  created_at                  DateTime                      @default(now()) @db.Timestamp(6)
+  particular                  Boolean                       @default(false)
+  contract_id                 String?                       @db.Uuid
+  contract                    contract?                     @relation(fields: [contract_id], references: [id], onDelete: NoAction, map: "conventions_fk")
+  service_location_convention service_location_convention[]
+}
+
+model docs {
+  id   String @id(map: "docs_pf") @db.Uuid
+  html String @db.VarChar
+  tag  String @db.VarChar
+}
+
+model exam_request_status {
+  id            String          @id(map: "exam_request_status_pk") @db.Uuid
+  name          String          @db.VarChar
+  tag           String          @db.VarChar
+  active        Boolean         @default(true)
+  exams_request exams_request[]
+}
+
+model exams_request {
+  id                       String                     @id(map: "exams_request_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reason                   String                     @db.VarChar
+  cid_id                   String                     @db.Uuid
+  contract_id              String                     @db.Uuid
+  client_id                String?                    @db.Uuid
+  created_at               DateTime                   @default(now()) @db.Timestamptz(6)
+  sequence_number          Int                        @default(autoincrement())
+  status_id                String?                    @db.Uuid
+  cids                     cids                       @relation(fields: [cid_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_request_fk")
+  contract                 contract                   @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_request_fk1")
+  clients                  clients?                   @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_request_fk2")
+  exam_request_status      exam_request_status?       @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_request_fk3")
+  exams_request_procedures exams_request_procedures[] @ignore
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model exams_request_procedures {
+  id              String        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  procedure_id    String        @db.VarChar
+  exam_request_id String        @db.Uuid
+  exams_request   exams_request @relation(fields: [exam_request_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "exams_request_procedures_fk_1")
+
+  @@ignore
+}
+
+model guide_procedures {
+  id           String     @id(map: "guide_procedures_pk") @db.Uuid
+  guide_id     String     @db.Uuid
+  procedure_id String     @db.Uuid
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  guides       guides     @relation(fields: [guide_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "guide_procedures_fk")
+  procedures   procedures @relation(fields: [procedure_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "guide_procedures_fk_1")
+}
+
+model guides {
+  id                                String              @id(map: "guides_pk") @db.Uuid
+  emitted_id                        String?             @db.Uuid
+  professional_id                   String?             @db.Uuid
+  cid_id                            String?             @db.Uuid
+  client_id                         String?             @db.Uuid
+  emitted_at                        DateTime            @default(now()) @db.Timestamp(6)
+  type                              String?             @db.VarChar(1)
+  requested_id                      String?             @db.Uuid
+  expiration_date                   DateTime?           @db.Timestamp(6)
+  status                            String?             @db.VarChar(1)
+  main_guide_id                     String?             @db.Uuid
+  speciality_id                     String?             @db.Uuid
+  authorized_id                     String?             @db.Uuid
+  urgency                           String?             @default("E") @db.VarChar(1)
+  service_location_id               String?             @db.Uuid
+  root_id                           String?             @db.VarChar
+  guide_procedures                  guide_procedures[]
+  users_guides_authorized_idTousers users?              @relation("guides_authorized_idTousers", fields: [authorized_id], references: [id], onDelete: NoAction, map: "authorized_fk")
+  cids                              cids?               @relation(fields: [cid_id], references: [id], onDelete: NoAction, map: "cid_fk")
+  clients                           clients?            @relation(fields: [client_id], references: [id], onDelete: NoAction, map: "client_fk")
+  users_guides_emitted_idTousers    users?              @relation("guides_emitted_idTousers", fields: [emitted_id], references: [id], onDelete: NoAction, map: "emitted_fk")
+  professionals                     professionals?      @relation(fields: [professional_id], references: [id], onDelete: NoAction, map: "professional_fk")
+  users_guides_requested_idTousers  users?              @relation("guides_requested_idTousers", fields: [requested_id], references: [id], onDelete: NoAction, map: "requested_fk")
+  service_locations                 service_locations?  @relation(fields: [service_location_id], references: [id], onDelete: NoAction, map: "service_location_fk")
+  specialities                      specialities?       @relation(fields: [speciality_id], references: [id], onDelete: NoAction, map: "speciality_fk")
+  scheduling_guides                 scheduling_guides[]
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model lr_service_password {
+  id                  String? @db.Uuid
+  service_password_id String? @db.Uuid
+  pannel_id           String? @db.Uuid
+
+  @@ignore
+}
+
+model memed_users {
+  id                   String    @id(map: "memed_users_pk") @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  created_at           DateTime? @db.Timestamp(6)
+  integrated           Boolean   @default(false)
+  user_id              String    @unique(map: "memed_users_un") @db.VarChar
+  has_error            Boolean   @default(false)
+  integration_error    String?   @db.VarChar
+  external_platform_id String?   @db.VarChar
+}
+
+model messages {
+  id         String   @id(map: "messages_pk") @db.Uuid
+  message    String?  @db.VarChar
+  type       Int
+  user_id    String   @db.Uuid
+  chat_id    String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  chat       chat     @relation(fields: [chat_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_fk")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: NoAction, map: "user_fk")
+}
+
+model notification_params {
+  id                 String               @id(map: "notification_params_pk") @db.Uuid
+  contract_id        String               @db.Uuid
+  tag                String               @db.VarChar
+  limit              Decimal              @db.Decimal
+  contract           contract             @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "notification_params_fk")
+  time_notifications time_notifications[]
+}
+
+model open_ai_bot_answers {
+  answer                String?               @db.VarChar
+  created_at            DateTime              @default(now()) @db.Timestamp(6)
+  feedback              String?               @db.Char(1)
+  scheduling_id         String                @db.Uuid
+  id                    String                @id(map: "open_ai_bot_messages_pk") @db.Uuid
+  question_id           String                @db.Uuid
+  schedulings           schedulings           @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "open_ai_bot_answers_fk")
+  open_ai_bot_questions open_ai_bot_questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "open_ai_bot_answers_fk_1")
+}
+
+model open_ai_bot_questions {
+  id                  String                @id(map: "open_ai_bot_questions_pk") @db.Uuid
+  question            String?               @db.VarChar
+  created_at          DateTime              @default(now()) @db.Timestamp(6)
+  scheduling_id       String                @db.Uuid
+  open_ai_bot_answers open_ai_bot_answers[]
+}
+
+model operators {
+  id          String   @id(map: "operators_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_id   String   @db.Uuid
+  contract_id String   @db.Uuid
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+  active      Boolean  @default(true)
+  contract    contract @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contract_fk")
+  persons     persons  @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+}
+
+model packages {
+  id                  String                @id(map: "packages_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String                @db.VarChar
+  contract_id         String?               @db.Uuid
+  created_at          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime              @default(now()) @db.Timestamptz(6)
+  contract            contract?             @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "procedures_packages_fk")
+  procedures_packages procedures_packages[]
+}
+
+model pannel {
+  id                                 String                               @id @db.Uuid
+  service_location_id                String
+  pannel_layout                      String
+  pannel_theme                       String
+  created_at                         DateTime                             @default(now()) @db.Timestamptz(6)
+  created_by                         String
+  active                             Boolean                              @default(true)
+  pannel_webhook_connected_reception pannel_webhook_connected_reception[]
+  service_password_inside_pannel     service_password_inside_pannel[]
+}
+
+model pannel_webhook_connected {
+  id                  String            @id(map: "pannel_webhook_connected_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  socket_id           String            @db.VarChar
+  service_location_id String            @db.Uuid
+  user_id             String            @db.Uuid
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime?         @db.Timestamptz(6)
+  active              Boolean           @default(true)
+  service_locations   service_locations @relation(fields: [service_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pannel_webhook_connected_fk")
+  users               users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pannel_webhook_connected_fk_1")
+}
+
+model pannel_webhook_connected_reception {
+  id         String    @id(map: "pannel_webhook_connected_reception_pk") @db.VarChar
+  active     Boolean   @default(false)
+  pannel_id  String    @db.Uuid
+  socket_id  String    @db.VarChar
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime? @db.Timestamp(6)
+  pannel     pannel    @relation(fields: [pannel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pannel_webhook_connected_reception_fk")
+}
+
+model payment {
+  id              String        @id(map: "payment_pk") @db.Uuid
+  scheduling_id   String        @db.Uuid
+  payment_type_id String?       @db.Uuid
+  date            DateTime?     @db.Timestamptz(6)
+  client_id       String        @db.Uuid
+  value           Float
+  surcharge       Float
+  discount        Float
+  total           Float
+  guide_id        String?       @db.VarChar
+  schedulings     schedulings   @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_fk")
+  payment_type    payment_type? @relation(fields: [payment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_fk_1")
+}
+
+model payment_type {
+  id                  String            @id(map: "payment_type_pk") @db.Uuid
+  name                String            @db.VarChar
+  active              Boolean           @default(true)
+  service_location_id String            @db.Uuid
+  payment             payment[]
+  service_locations   service_locations @relation(fields: [service_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "payment_type_fk")
+}
+
+model permitions {
+  id              String            @id @unique(map: "uk_permitions1") @db.Uuid
+  role            String            @db.VarChar(100)
+  initials        String?           @db.VarChar(3)
+  key             String?           @db.VarChar(100)
+  type            String?           @db.VarChar(1)
+  aplications     aplications[]
+  user_permitions user_permitions[]
+
+  @@index([key], map: "ak_permitions1")
+}
+
+model person_address {
+  id              String    @id(map: "person_address_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cep             String?   @db.VarChar(8)
+  street          String    @db.VarChar(100)
+  neighborhood    String    @db.VarChar(100)
+  number          Int?
+  complement      String?   @db.VarChar(100)
+  latitude        Decimal?  @db.Decimal
+  longitude       Decimal?  @db.Decimal
+  main            Boolean
+  active          Boolean
+  type            String    @db.Char(1)
+  person_id       String    @db.Uuid
+  uf              String    @db.Char(2)
+  county_id       Int?
+  street_id       Int?
+  county          String?   @db.VarChar(100)
+  ibge            Int?
+  neighborhood_id Int?
+  created_at      DateTime? @default(now()) @db.Timestamp(6)
+  created_by      String?   @db.Uuid
+  persons         persons   @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+  users           users?    @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+}
+
+model person_anexos {
+  id             String       @id(map: "person_anexos_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_id      String       @db.Uuid
+  pess_client_id String       @db.Uuid
+  created_at     DateTime     @default(now()) @db.Timestamp(6)
+  anexo_id       String       @db.Uuid
+  status         Boolean?     @default(false)
+  user_id        String?      @db.Uuid
+  type           String?      @db.VarChar
+  scheduling_id  String?      @db.Uuid
+  anexos         anexos       @relation(fields: [anexo_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "anexo_fk")
+  schedulings    schedulings? @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, map: "scheduling_fk")
+  users          users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+
+  @@index([anexo_id], map: "person_anexos_fkidx")
+}
+
+model person_emails {
+  id               String    @id(map: "person_emails_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email            String    @db.VarChar(120)
+  main             Boolean
+  active           Boolean?  @default(true)
+  confirmed_ip     String?   @db.VarChar(30)
+  client_confirmed String?   @db.VarChar(100)
+  person_id        String    @db.Uuid
+  confirmed_at     DateTime? @db.Timestamp(6)
+  created_at       DateTime? @default(now()) @db.Timestamp(6)
+  created_by       String?   @db.Uuid
+  persons          persons   @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+  users            users?    @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+}
+
+model person_params {
+  id                   String              @id(map: "person_params_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  person_param_type_id String              @db.Uuid
+  contract_id          String              @db.Uuid
+  active               Boolean             @default(false)
+  person_params_types  person_params_types @relation(fields: [person_param_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_params_fk")
+  contract             contract            @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_params_fk1")
+
+  @@unique([person_param_type_id, contract_id], map: "person_params_un")
+}
+
+model person_params_types {
+  id            String          @id(map: "person_params_types_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String          @db.VarChar
+  acronym       String          @db.VarChar
+  contract_id   String          @db.Uuid
+  person_params person_params[]
+  contract      contract        @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_params_types_fk")
+}
+
+model person_telephones {
+  id                String    @id(map: "person_telephone_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number            String    @db.VarChar(11)
+  main              Boolean
+  active            Boolean
+  confirmation_code String?   @db.VarChar(10)
+  type              String    @db.Char(1)
+  person_id         String    @db.Uuid
+  confirmed_at      DateTime? @db.Timestamp(6)
+  created_at        DateTime  @default(now()) @db.Timestamp(6)
+  created_by        String?   @db.Uuid
+  persons           persons   @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model persons {
+  id                 String              @id(map: "person_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String              @db.VarChar(100)
+  social_name        String?             @db.VarChar(80)
+  mother_name        String?             @db.VarChar(100)
+  father_name        String?             @db.VarChar(100)
+  cnpj               String?             @db.Char(14)
+  cpf                String?             @unique(map: "cpf_un") @db.Char(11)
+  rg                 String?             @db.VarChar(16)
+  rg_agency          String?             @db.VarChar(10)
+  date_expedition_rg DateTime?           @db.Date
+  pis                String?             @db.VarChar(11)
+  birth_date         DateTime?           @db.Date
+  sex                String?             @db.Char(1)
+  civil_status       String?             @db.Char(1)
+  education_degree   String?             @db.VarChar(2)
+  death_date         DateTime?           @db.Date
+  cns                String?             @db.VarChar(16)
+  birth_certificate  String?             @db.VarChar(15)
+  cnes               String?             @db.VarChar(10)
+  type               String?             @db.Char(1)
+  profession_id      Int?
+  nationality        String?             @db.VarChar(2)
+  religion           String?             @db.VarChar(35)
+  race               String?             @db.VarChar(10)
+  created_at         DateTime            @default(now()) @db.Timestamp(6)
+  created_by         String?             @db.Uuid
+  pre                Boolean             @default(false)
+  confirmed_at       DateTime?           @db.Timestamptz(6)
+  allergy            allergy[]
+  clients            clients[]
+  operators          operators[]
+  person_address     person_address[]
+  person_emails      person_emails[]
+  person_telephones  person_telephones[]
+  professions        professions?        @relation(fields: [profession_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "profession_fk")
+  professionals      professionals[]
+  service_locations  service_locations[]
+  users              users[]
+
+  @@index([cns], map: "person_cnsx")
+  @@index([cpf], map: "person_cpfx")
+  @@index([id], map: "person_idx")
+  @@index([name], map: "person_namex")
+}
+
+model procedures {
+  id                    String                  @id(map: "proceduries_pk") @db.Uuid
+  name                  String                  @db.VarChar(255)
+  code                  String                  @db.VarChar(10)
+  observation           String?                 @db.VarChar(4000)
+  tus                   Boolean                 @default(false)
+  contract_id           String?                 @db.Uuid
+  guide_procedures      guide_procedures[]
+  contract              contract?               @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "procedures_fk")
+  professional_shifts   professional_shifts[]
+  scheduling_procedures scheduling_procedures[]
+}
+
+model procedures_packages {
+  id           String   @id(map: "procedures_packages_pk1") @db.Uuid
+  procedure_id String   @db.VarChar
+  package_id   String   @db.Uuid
+  packages     packages @relation(fields: [package_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "procedures_packages_fk")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model professional_shifts {
+  id                                              String                     @id(map: "professional_shift_pk") @db.Uuid
+  beginning                                       DateTime                   @db.Timetz(6)
+  end                                             DateTime                   @db.Timetz(6)
+  interval                                        DateTime                   @db.Timetz(6)
+  day                                             Int
+  type                                            Int
+  time_lock                                       DateTime?                  @db.Timetz(6)
+  professional_id                                 String                     @db.Uuid
+  active                                          Boolean                    @default(true)
+  inactivated_at                                  DateTime?                  @db.Timestamptz(0)
+  inactivated_by                                  String?                    @db.Uuid
+  modality                                        String                     @default("P") @db.VarChar(1)
+  regime                                          String                     @default("T") @db.VarChar(1)
+  created_by                                      String?                    @db.Uuid
+  created_at                                      DateTime                   @default(now()) @db.Timestamptz(0)
+  updated_by                                      String?                    @db.Uuid
+  updated_at                                      DateTime                   @default(now()) @db.Timestamptz(0)
+  speciality_id                                   String?                    @db.Uuid
+  procedure_id_old                                String?                    @db.Uuid
+  service_location_id                             String                     @db.Uuid
+  procedure_id                                    String?                    @db.VarChar
+  users_professional_shifts_created_byTousers     users?                     @relation("professional_shifts_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, map: "created_fk")
+  users_professional_shifts_inactivated_byTousers users?                     @relation("professional_shifts_inactivated_byTousers", fields: [inactivated_by], references: [id], onDelete: NoAction, map: "inactivated_fk")
+  procedures                                      procedures?                @relation(fields: [procedure_id_old], references: [id], onDelete: NoAction, map: "procedures_fk")
+  professionals                                   professionals              @relation(fields: [professional_id], references: [id], onDelete: NoAction, map: "professional_fk")
+  professional_specialities                       professional_specialities? @relation(fields: [speciality_id], references: [id], onDelete: NoAction, map: "professional_specialities_fk")
+  service_locations                               service_locations          @relation(fields: [service_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "sl_fk")
+  users_professional_shifts_updated_byTousers     users?                     @relation("professional_shifts_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, map: "updated_fk")
+  schedules                                       schedules[]
+  shift_validities                                shift_validities[]
+}
+
+model professional_specialities {
+  id                  String                @id(map: "professional_speciality_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  professional_id     String                @db.Uuid
+  speciality_id       String                @db.Uuid
+  rqe                 String?               @db.VarChar
+  active              Boolean               @default(true)
+  created_by          String?               @db.Uuid
+  professional_shifts professional_shifts[]
+  professionals       professionals         @relation(fields: [professional_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "professional_fk")
+  specialities        specialities          @relation(fields: [speciality_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "speciality_fk")
+  users               users?                @relation(fields: [created_by], references: [id], onDelete: NoAction, map: "users_fk")
+}
+
+model professionals {
+  id                        String                      @id(map: "prestadores_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number_advice             Decimal?                    @db.Decimal
+  advice_id                 String?                     @db.Uuid
+  advice_uf                 String?                     @db.VarChar(2)
+  person_id                 String?                     @db.Uuid
+  active                    Boolean                     @default(true)
+  contract_id               String                      @db.Uuid
+  chat_professional         chat_professional[]
+  guides                    guides[]
+  professional_shifts       professional_shifts[]
+  professional_specialities professional_specialities[]
+  advices                   advices?                    @relation(fields: [advice_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advice_fk")
+  contract                  contract                    @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contract_fk")
+  persons                   persons?                    @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+  schedules                 schedules[]
+
+  @@index([person_id], map: "professional1")
+}
+
+model professions {
+  id      Int       @id(map: "profession_pk")
+  name    String    @db.VarChar(80)
+  code    String    @db.VarChar(10)
+  area    String    @db.VarChar(50)
+  persons persons[]
+
+  @@index([name], map: "fk_profession1")
+  @@index([code], map: "fk_profession2")
+}
+
+model release_notes {
+  id         String @id(map: "release_notes_pk") @default(dbgenerated("gen_random_uuid()")) @db.VarChar
+  note       String @db.VarChar
+  version    String @db.VarChar
+  created_at String @default(dbgenerated("now()")) @db.VarChar
+  type       String @db.VarChar
+}
+
+model risk {
+  id          String      @id(map: "risk_fk") @db.Uuid
+  description String      @db.VarChar
+  color       String      @db.VarChar
+  screening   screening[]
+}
+
+model schedule_notification {
+  id                   String             @id(map: "schedule_notification_pk") @db.VarChar
+  scheduling_id        String             @db.Uuid
+  date                 DateTime           @db.Timestamp(6)
+  client_id            String             @db.Uuid
+  message_topic        String             @db.VarChar
+  active               Boolean            @default(true)
+  time_notification_id String             @db.Uuid
+  schedulings          schedulings        @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_notification_fk")
+  clients              clients            @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_notification_fk_1")
+  time_notifications   time_notifications @relation(fields: [time_notification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_notification_fk_2")
+}
+
+model schedule_planning {
+  id                String    @id(map: "schedule_planning_pk") @db.Uuid
+  created_schedules Json
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  created_by        String    @db.Uuid
+  message           String?   @db.VarChar
+  count_schedules   Decimal   @db.Decimal
+  count_schedulings Decimal   @db.Decimal
+  dropped           Boolean   @default(false)
+  dropped_at        DateTime? @db.Timestamptz(6)
+  users             users     @relation(fields: [created_by], references: [id], onDelete: NoAction, map: "schedule_planning_fk")
+}
+
+model schedules {
+  id                        String                   @id(map: "schedule_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  date                      DateTime                 @db.Date
+  active                    Boolean                  @default(true)
+  professional_id           String?                  @db.Uuid
+  service_location_id       String                   @db.Uuid
+  interval                  DateTime?                @db.Timetz(6)
+  speciality_id             String?                  @db.Uuid
+  professional_shift_id     String?                  @db.Uuid
+  service_location_shift_id String?                  @db.Uuid
+  created_at                DateTime                 @db.Timestamptz(6)
+  validity_id               String?                  @db.Uuid
+  professionals             professionals?           @relation(fields: [professional_id], references: [id], onDelete: NoAction, map: "professional_fk")
+  professional_shifts       professional_shifts?     @relation(fields: [professional_shift_id], references: [id], onDelete: NoAction, map: "professional_shift_fk")
+  service_locations         service_locations        @relation(fields: [service_location_id], references: [id], onDelete: NoAction, map: "service_location_fk")
+  service_location_shifts   service_location_shifts? @relation(fields: [service_location_shift_id], references: [id], onDelete: NoAction, map: "service_location_shift_fk")
+  specialities              specialities?            @relation(fields: [speciality_id], references: [id], onDelete: NoAction, map: "speciality_fk")
+  shift_validities          shift_validities?        @relation(fields: [validity_id], references: [id], onDelete: NoAction, map: "validity_fk")
+  schedulings               schedulings[]
+
+  @@index([date, active], map: "schedule_date_aactive_idx")
+  @@index([date], map: "schedule_date_idx")
+  @@index([professional_id], map: "schedule_professional_id_idx")
+  @@index([service_location_id], map: "schedule_service_location_id_idx")
+  @@index([speciality_id], map: "schedule_speciality_id_idx")
+}
+
+model scheduling_guides {
+  id            String      @id(map: "scheduling_guide_fk") @db.Uuid
+  scheduling_id String      @db.Uuid
+  created_by    String      @db.Uuid
+  active        Boolean     @default(true)
+  guide_id      String      @db.Uuid
+  created_at    DateTime    @default(now()) @db.Timestamptz(0)
+  users         users       @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "created_fk")
+  guides        guides      @relation(fields: [guide_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "guide_fk")
+  schedulings   schedulings @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scheduling_fk")
+}
+
+model scheduling_procedures {
+  id               String      @id(map: "scheduling_procedures_pk") @db.Uuid
+  scheduling_id    String      @db.Uuid
+  procedure_id_old String?     @db.Uuid
+  created_at       DateTime    @default(now()) @db.Timestamp(6)
+  qtde             Int         @default(1)
+  procedure_id     String?     @db.VarChar
+  procedures       procedures? @relation(fields: [procedure_id_old], references: [id], onDelete: NoAction, map: "procedure_fk")
+  schedulings      schedulings @relation(fields: [scheduling_id], references: [id], onDelete: Cascade, map: "scheduling_fk")
+}
+
+model scheduling_screening {
+  id            String      @id(map: "scheduling_screening_fk") @db.Uuid
+  scheduling_id String      @db.Uuid
+  screening_id  String      @db.Uuid
+  schedulings   schedulings @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "scheduling_fk")
+  screening     screening   @relation(fields: [screening_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "screening_fk")
+}
+
+model scheduling_sources {
+  id          Int           @id(map: "scheduling_sources_pk") @default(autoincrement())
+  code        String        @db.VarChar
+  description String        @db.VarChar
+  active      Boolean       @default(true)
+  created_at  DateTime      @default(now()) @db.Timestamp(6)
+  schedulings schedulings[]
+}
+
+model scheduling_status {
+  id                    String                  @id(map: "scheduling_status_pk") @db.Uuid
+  description           String?                 @db.VarChar
+  tag                   String                  @unique(map: "tag_un") @db.VarChar(5)
+  color                 String?                 @db.VarChar
+  active                Boolean                 @default(true)
+  status                String                  @default("R") @db.VarChar(1)
+  scheduling_status_log scheduling_status_log[]
+  schedulings           schedulings[]
+}
+
+model scheduling_status_log {
+  id                String            @id(map: "scheduling_status_log_pk") @db.Uuid
+  from              String            @db.Uuid
+  to                String            @db.Uuid
+  created_at        DateTime          @default(now()) @db.Timestamptz(6)
+  user_id           String            @db.Uuid
+  success           Boolean           @default(true)
+  message           String            @db.VarChar
+  scheduling_id     String            @db.Uuid
+  scheduling_status scheduling_status @relation(fields: [to], references: [id], onDelete: NoAction, map: "from_fk")
+  schedulings       schedulings       @relation(fields: [scheduling_id], references: [id], onDelete: NoAction, map: "scheduling_fk")
+  users             users             @relation(fields: [user_id], references: [id], onDelete: NoAction, map: "users_fk")
+}
+
+model schedulings {
+  id                    String                  @id(map: "schedulings_fk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  time                  DateTime                @db.Timetz(6)
+  observation           String?                 @db.VarChar(500)
+  scheduling_date       DateTime?               @db.Timestamptz(6)
+  schedule_id           String                  @db.Uuid
+  speciality_id         String?                 @db.Uuid
+  client_id             String?                 @db.Uuid
+  active                Boolean?                @default(true)
+  arrival_time          DateTime?               @db.Timetz(6)
+  service_regime        String?                 @db.VarChar(1)
+  service_type_id       String?                 @db.Uuid
+  newborn               Boolean?
+  guide_id              String?                 @db.Uuid
+  status_id             String                  @db.Uuid
+  created_at            DateTime                @db.Timestamptz(6)
+  client_convention_id  String?                 @db.Uuid
+  checkin_id            String?                 @db.Uuid
+  paid                  Boolean                 @default(false)
+  accident_indicator_id String?                 @db.Uuid
+  consultation_type_id  String?                 @db.Uuid
+  embedded              Boolean                 @default(false)
+  source_id             Int?
+  aso                   Boolean                 @default(false)
+  scheduled_at          DateTime?               @db.Timestamptz(6)
+  anaminesis            anaminesis[]
+  open_ai_bot_answers   open_ai_bot_answers[]
+  payment               payment[]
+  person_anexos         person_anexos[]
+  schedule_notification schedule_notification[]
+  scheduling_guides     scheduling_guides[]
+  scheduling_procedures scheduling_procedures[]
+  scheduling_screening  scheduling_screening[]
+  scheduling_status_log scheduling_status_log[]
+  accident_indicator    accident_indicator?     @relation(fields: [accident_indicator_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "accident_indicator_fk")
+  checkin               checkin?                @relation(fields: [checkin_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "checkin_fk")
+  client_conventions    client_conventions?     @relation(fields: [client_convention_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "client_convention_fk")
+  clients               clients?                @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "client_fk")
+  consultation_type     consultation_type?      @relation(fields: [consultation_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "consultation_type_fk")
+  schedules             schedules               @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "schedule_fk")
+  scheduling_status     scheduling_status       @relation(fields: [status_id], references: [id], onDelete: NoAction, map: "scheduling_status_fk")
+  service_types         service_types?          @relation(fields: [service_type_id], references: [id], onDelete: NoAction, map: "service_type_fk")
+  scheduling_sources    scheduling_sources?     @relation(fields: [source_id], references: [id], onDelete: NoAction, map: "sources_fk")
+  specialities          specialities?           @relation(fields: [speciality_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "speciality_fk")
+}
+
+model screening {
+  id                     String                 @id(map: "screening_fk") @db.Uuid
+  risk_id                String                 @db.Uuid
+  height                 String?                @db.VarChar
+  heaviness              String?                @db.VarChar
+  temperature            String?                @db.VarChar
+  heart_rate             String?                @db.VarChar
+  minimum_blood_pressure String?                @db.VarChar
+  saturation_o2          String?                @db.VarChar
+  observing              String?                @db.VarChar
+  hgt                    String?                @db.VarChar
+  created_at             DateTime               @default(now()) @db.Timestamp(6)
+  breathing_frequency    String?                @db.VarChar
+  imc                    String?                @db.VarChar
+  scheduling_screening   scheduling_screening[]
+  risk                   risk                   @relation(fields: [risk_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "risk_fk")
+}
+
+model service_location_convention {
+  id                  String            @id(map: "service_location_convention_pk") @db.Uuid
+  service_location_id String            @db.Uuid
+  convention_id       String            @db.Uuid
+  created_at          DateTime          @default(now()) @db.Timestamptz(6)
+  conventions         conventions       @relation(fields: [convention_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_location_convention_fk")
+  service_locations   service_locations @relation(fields: [service_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_location_convention_fk_1")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model service_location_shifts {
+  id                                                  String            @id(map: "service_location_shift_pk") @db.Uuid
+  beginning                                           DateTime          @db.Timetz(6)
+  end                                                 DateTime          @db.Timetz(6)
+  inteval                                             DateTime          @db.Timetz(6)
+  day                                                 Int
+  type                                                Int
+  time_lock                                           DateTime?         @db.Timetz(6)
+  service_location_id                                 String            @db.Uuid
+  active                                              Boolean           @default(true)
+  inactivated_at                                      DateTime?         @db.Timestamptz(0)
+  inactivated_by                                      String?           @db.Uuid
+  modality                                            String            @default("P") @db.VarChar(1)
+  regime                                              String            @default("T") @db.VarChar(1)
+  watch_shift_id                                      String            @db.Uuid
+  created_by                                          String?           @db.Uuid
+  created_at                                          DateTime          @default(now()) @db.Timestamptz(0)
+  updated_by                                          String?           @db.Uuid
+  updated_at                                          DateTime          @default(now()) @db.Timestamptz(0)
+  schedules                                           schedules[]
+  users_service_location_shifts_created_byTousers     users?            @relation("service_location_shifts_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, map: "created_fk")
+  users_service_location_shifts_inactivated_byTousers users?            @relation("service_location_shifts_inactivated_byTousers", fields: [inactivated_by], references: [id], onDelete: NoAction, map: "inactivated_fk")
+  service_locations                                   service_locations @relation(fields: [service_location_id], references: [id], onDelete: NoAction, map: "service_location_fk")
+  users_service_location_shifts_updated_byTousers     users?            @relation("service_location_shifts_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, map: "updated_fk")
+  watch_shifts                                        watch_shifts      @relation(fields: [watch_shift_id], references: [id], onDelete: NoAction, map: "watch_shift_fk")
+}
+
+model service_locations {
+  id                          String                        @id(map: "service_location_pk") @db.Uuid
+  advice_numero               Decimal?                      @db.Decimal
+  advice_id                   String?                       @db.Uuid
+  advice_uf                   String?                       @db.VarChar(2)
+  cnes                        String?                       @db.VarChar(20)
+  person_id                   String?                       @db.Uuid
+  contract_id                 String?                       @db.Uuid
+  created_at                  DateTime                      @default(now()) @db.Timestamptz(6)
+  guides                      guides[]
+  pannel_webhook_connected    pannel_webhook_connected[]
+  payment_type                payment_type[]
+  professional_shifts         professional_shifts[]
+  schedules                   schedules[]
+  service_location_convention service_location_convention[]
+  service_location_shifts     service_location_shifts[]
+  advices                     advices?                      @relation(fields: [advice_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advice_fk")
+  contract                    contract?                     @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contract_fk")
+  persons                     persons?                      @relation(fields: [person_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "person_fk")
+}
+
+model service_password {
+  id                             String                           @id @db.Uuid
+  acronym                        String
+  description                    String
+  contract_id                    String
+  is_priority                    Boolean
+  active                         Boolean
+  created_at                     DateTime                         @default(now()) @db.Timestamptz(6)
+  created_by                     String
+  weight                         Int
+  service_password_inside_pannel service_password_inside_pannel[]
+}
+
+model service_password_calls {
+  id                             String                         @id(map: "service_password_calls_pk") @db.Uuid
+  service_password_id            String                         @db.Uuid
+  client_id                      String?                        @db.Uuid
+  called                         Boolean                        @default(false)
+  called_by                      String?                        @db.Uuid
+  date                           DateTime                       @default(dbgenerated("CURRENT_DATE")) @db.Date
+  password_number                Int
+  desk_caller                    String?                        @db.VarChar
+  created_at                     DateTime                       @default(now()) @db.Timestamptz(6)
+  custom_text_call               String?                        @db.VarChar
+  location                       String?                        @db.VarChar
+  users                          users?                         @relation(fields: [called_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_password_calls_fk")
+  clients                        clients?                       @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_password_calls_fk_1")
+  service_password_inside_pannel service_password_inside_pannel @relation(fields: [service_password_id], references: [id], onDelete: NoAction, map: "service_password_inside_pannel_fk")
+}
+
+model service_password_inside_pannel {
+  id                     String                   @id(map: "service_password_inside_pannel_pk") @db.Uuid
+  service_password_id    String                   @db.Uuid
+  pannel_id              String                   @db.Uuid
+  service_password_calls service_password_calls[]
+  pannel                 pannel                   @relation(fields: [pannel_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_password_inside_pannel_fk")
+  service_password       service_password         @relation(fields: [service_password_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "service_password_inside_pannel_fk_1")
+}
+
+model service_types {
+  id          String        @id(map: "service_types_pk") @db.Uuid
+  description String        @db.VarChar(100)
+  acronym     String        @db.VarChar(10)
+  default     Boolean       @default(false)
+  schedulings schedulings[]
+}
+
+model shift_validities {
+  id                  String              @id(map: "shift_validities_pk") @db.Uuid
+  start_date          DateTime            @db.Date
+  end_date            DateTime            @db.Date
+  created_at          DateTime            @default(now()) @db.Timestamptz(6)
+  created_by          String              @db.Uuid
+  active              Boolean             @default(true)
+  shift_id            String              @db.Uuid
+  schedules           schedules[]
+  users               users               @relation(fields: [created_by], references: [id], onDelete: NoAction, map: "_fkcreated_by")
+  professional_shifts professional_shifts @relation(fields: [shift_id], references: [id], onDelete: NoAction, map: "shifts_fk")
+}
+
+model source {
+  id          String    @id @db.Uuid
+  source_id   String?   @db.Uuid
+  type        String?   @db.VarChar
+  description String?   @db.VarChar
+  checkin     checkin[]
+}
+
+model specialities {
+  id                        String                      @id(map: "speciality_pk") @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                      String                      @db.VarChar(100)
+  active                    Boolean                     @default(true)
+  advice_id                 String?                     @db.Uuid
+  created_by                String?                     @db.Uuid
+  memed_id                  String?                     @db.VarChar
+  guides                    guides[]
+  professional_specialities professional_specialities[]
+  schedules                 schedules[]
+  schedulings               schedulings[]
+  users                     users?                      @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_fk")
+
+  @@index([created_by], map: "healthdev_especialidade_operador_id_idx")
+}
+
+model time_notifications {
+  id                    String                  @id(map: "time_notifications_pk") @db.Uuid
+  time                  Decimal                 @db.Decimal
+  notification_param_id String                  @db.Uuid
+  schedule_notification schedule_notification[]
+  notification_params   notification_params     @relation(fields: [notification_param_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "time_notifications_fk")
+}
+
+model tuss {
+  id                 String   @id(map: "tuss_pk") @default(dbgenerated("(gen_random_uuid())::text")) @db.VarChar
+  code               String   @db.VarChar
+  description        String   @db.VarChar
+  ans_rol            String   @default("NAO") @db.VarChar
+  rol_classification String?  @db.VarChar
+  group              String?  @db.VarChar
+  sub_group          String?  @db.VarChar
+  cap                String?  @db.VarChar
+  od                 String?  @db.VarChar
+  amb                String?  @db.VarChar
+  hco                String?  @db.VarChar
+  pac                String?  @db.VarChar
+  dut                String?  @db.VarChar
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  active             Boolean? @default(true)
+  hso                String?  @db.VarChar(50)
+}
+
+model user_permitions {
+  id           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  permition_id String     @db.Uuid
+  user_id      String     @db.Uuid
+  active       Boolean    @default(true)
+  contract_id  String?    @db.Uuid
+  created_at   DateTime   @default(now()) @db.Timestamptz(6)
+  permitions   permitions @relation(fields: [permition_id], references: [id], onDelete: NoAction, map: "permition_fk")
+  users        users      @relation(fields: [user_id], references: [id], onDelete: NoAction, map: "user_fk")
+  contract     contract?  @relation(fields: [contract_id], references: [id], onDelete: NoAction, map: "user_permitions_fk")
+
+  @@index([permition_id], map: "fk_user_permitions1")
+  @@index([user_id], map: "fk_user_permitions2")
+}
+
+model users {
+  id                                                                    String                      @id(map: "users_pk") @db.Uuid
+  username                                                              String                      @unique(map: "users_un") @db.VarChar(50)
+  password                                                              String                      @db.VarChar(120)
+  person_id                                                             String?                     @db.Uuid
+  inactive_date                                                         DateTime?                   @db.Timestamptz(6)
+  beta_access                                                           Boolean                     @default(false)
+  prod_access                                                           Boolean                     @default(true)
+  password_expiry_within                                                Decimal                     @default(200) @db.Decimal
+  password_expiry                                                       Boolean                     @default(true)
+  active                                                                Boolean                     @default(true)
+  double_authentication                                                 Boolean                     @default(true)
+  date_creation_password                                                DateTime                    @default(now()) @db.Timestamptz(6)
+  created_at                                                            DateTime                    @default(now()) @db.Timestamptz(6)
+  created_by                                                            String?                     @db.Uuid
+  contract_id                                                           String?                     @db.Uuid
+  profile_image_url                                                     String?                     @db.VarChar
+  allergy                                                               allergy[]
+  anexos                                                                anexos[]
+  chat                                                                  chat[]
+  client_conventions_client_conventions_created_byTousers               client_conventions[]        @relation("client_conventions_created_byTousers")
+  client_conventions_client_conventions_disabled_byTousers              client_conventions[]        @relation("client_conventions_disabled_byTousers")
+  confirmation_codes                                                    confirmation_codes[]
+  guides_guides_authorized_idTousers                                    guides[]                    @relation("guides_authorized_idTousers")
+  guides_guides_emitted_idTousers                                       guides[]                    @relation("guides_emitted_idTousers")
+  guides_guides_requested_idTousers                                     guides[]                    @relation("guides_requested_idTousers")
+  messages                                                              messages[]
+  pannel_webhook_connected                                              pannel_webhook_connected[]
+  person_address                                                        person_address[]
+  person_anexos                                                         person_anexos[]
+  person_emails                                                         person_emails[]
+  professional_shifts_professional_shifts_created_byTousers             professional_shifts[]       @relation("professional_shifts_created_byTousers")
+  professional_shifts_professional_shifts_inactivated_byTousers         professional_shifts[]       @relation("professional_shifts_inactivated_byTousers")
+  professional_shifts_professional_shifts_updated_byTousers             professional_shifts[]       @relation("professional_shifts_updated_byTousers")
+  professional_specialities                                             professional_specialities[]
+  schedule_planning                                                     schedule_planning[]
+  scheduling_guides                                                     scheduling_guides[]
+  scheduling_status_log                                                 scheduling_status_log[]
+  service_location_shifts_service_location_shifts_created_byTousers     service_location_shifts[]   @relation("service_location_shifts_created_byTousers")
+  service_location_shifts_service_location_shifts_inactivated_byTousers service_location_shifts[]   @relation("service_location_shifts_inactivated_byTousers")
+  service_location_shifts_service_location_shifts_updated_byTousers     service_location_shifts[]   @relation("service_location_shifts_updated_byTousers")
+  service_password_calls                                                service_password_calls[]
+  shift_validities                                                      shift_validities[]
+  specialities                                                          specialities[]
+  user_permitions                                                       user_permitions[]
+  contract                                                              contract?                   @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contract_fk")
+  persons                                                               persons?                    @relation(fields: [person_id], references: [id], onDelete: NoAction, map: "person_fk")
+  users                                                                 users?                      @relation("usersTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_fk")
+  other_users                                                           users[]                     @relation("usersTousers")
+  watch_shifts_watch_shifts_created_byTousers                           watch_shifts[]              @relation("watch_shifts_created_byTousers")
+  watch_shifts_watch_shifts_inactivated_byTousers                       watch_shifts[]              @relation("watch_shifts_inactivated_byTousers")
+
+  @@index([id], map: "users_idx")
+}
+
+model watch_shifts {
+  id                                       String                    @id(map: "watch_shift_pk") @db.Uuid
+  created_at                               DateTime                  @default(now()) @db.Timestamptz(0)
+  created_by                               String                    @db.Uuid
+  active                                   Boolean                   @default(true)
+  inactivated_at                           DateTime?                 @db.Timestamptz(0)
+  inactivated_by                           String?                   @db.Uuid
+  month                                    Int                       @default(0)
+  year                                     Int                       @default(0)
+  service_location_shifts                  service_location_shifts[]
+  users_watch_shifts_created_byTousers     users                     @relation("watch_shifts_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, map: "created_fk")
+  users_watch_shifts_inactivated_byTousers users?                    @relation("watch_shifts_inactivated_byTousers", fields: [inactivated_by], references: [id], onDelete: NoAction, map: "inactivated_fk")
+
+  @@unique([month, year], map: "watch_shift_idx")
 }

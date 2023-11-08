@@ -197,12 +197,12 @@ export class RecognitionsService {
     })
 
     console.log({
-      dataA: dayjs(person.birth_date).add(3, 'hours').format('YYYY-MM-DD'),
+      dataA: dayjs(person?.birth_date).add(3, 'hours').format('YYYY-MM-DD'),
       dataB: dayjs(birth_date).format('YYYY-MM-DD')
     });
 
 
-    if (!!person && !!(dayjs(person.birth_date).add(3, 'hours').format('YYYY-MM-DD') !== dayjs(birth_date).format('YYYY-MM-DD'))) {
+    if (!!person && !!(dayjs(person?.birth_date).add(3, 'hours').format('YYYY-MM-DD') !== dayjs(birth_date).format('YYYY-MM-DD'))) {
       throw new HttpException({ message: 'Os dados do cliente estão inválidos ou divergentes' }, HttpStatus.UNPROCESSABLE_ENTITY)
     }
 

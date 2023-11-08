@@ -17,7 +17,7 @@ export class FaceApiService {
   private optionsSSDMobileNet: SsdMobilenetv1Options
 
   constructor() {
-    this.modelsUrl = path.join(__dirname, '..', '..', 'config')
+    this.modelsUrl = path.join(__dirname, '..', '..', 'config', 'faceapi', 'models')
     this.logger = new Logger(FaceApiService.name)
   }
 

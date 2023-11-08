@@ -20,6 +20,7 @@ RUN npm ci
 # Bundle app source
 COPY --chown=node:node . .
 COPY --chown=node:node prisma .
+COPY --chown=node:node config .
 # COPY --chown=node:node .env ./
 
 # Use the node user from the image (instead of the root user)
@@ -40,6 +41,7 @@ COPY --chown=node:node --from=development /usr/src/app/node_modules ./node_modul
 
 COPY --chown=node:node . .
 COPY --chown=node:node prisma .
+COPY --chown=node:node config .
 
 #GENERATE PRISMA FILES
 RUN npx prisma generate
@@ -67,7 +69,8 @@ FROM --platform=linux/x86_64 node:18 As production
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
 COPY --chown=node:node --from=build /usr/src/app/prisma prisma 
-# COPY --chown=node:node --from=build /usr/src/app/infra/config ./dist/infra/config
+COPY --chown=node:node --from=build /usr/src/app/config config 
+COPY --chown=node:node --from=build /usr/src/app/config ./dist/config 
 
 # COPY --chown=node:node .env ./
 

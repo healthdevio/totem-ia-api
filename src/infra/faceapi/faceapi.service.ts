@@ -17,26 +17,14 @@ export class FaceApiService {
   private optionsSSDMobileNet: SsdMobilenetv1Options
 
   constructor() {
-    this.modelsUrl = '../config/faceapi/models'
+    this.modelsUrl = path.join(__dirname, '..', '..', 'config')
     this.logger = new Logger(FaceApiService.name)
   }
 
   private async loadModels() {
     this.logger.debug("FaceAPI single-process test");
-
-    // await faceapi.tf("tensorflow");
-    // await faceapi.tf.enableProdMode();
-    // await faceapi.tf.ENV.set("DEBUG", false);
-    // await faceapi.tf.ready();
-
-    // console.log(
-    //   `Version: TensorFlow/JS ${faceapi.tf?.version_core} FaceAPI ${
-    //     faceapi.version.faceapi
-    //   } Backend: ${faceapi.tf?.getBackend()}`
-    // );
-
     console.log("Loading FaceAPI models");
-    const modelPath = path.join(__dirname, this.modelsUrl);
+    const modelPath = path.join(this.modelsUrl);
 
     console.log('>> ', modelPath);
     

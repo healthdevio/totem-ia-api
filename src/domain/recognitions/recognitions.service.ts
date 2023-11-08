@@ -117,7 +117,7 @@ export class RecognitionsService {
       const id = randomUUID()
       person = await this.prisma.persons.create({
         data: {
-          cpf, id, birth_date, type: 'F', name, person_telephones: {
+          cpf, id, birth_date: new Date(birth_date), type: 'F', name, person_telephones: {
             create: {
               id: randomUUID(),
               number: telephone,
